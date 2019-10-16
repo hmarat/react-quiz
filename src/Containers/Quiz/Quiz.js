@@ -4,7 +4,7 @@ import ActiveQuiz from "../../Components/ActiveQuiz/ActiveQuiz"
 import FinishedQuiz from "../../Components/FinishedQuiz/FinishedQuiz"
 import Loader from "../../Components/UI/Loader/Loader"
 import {connect} from "react-redux"
-import {fetchQuiz, fetchQuizRetry} from "../../store/actions/quiz"
+import {fetchQuiz, quizAnswerClick, retryQuiz} from "../../store/actions/quiz"
 
 
 class Quiz extends Component{
@@ -13,51 +13,8 @@ class Quiz extends Component{
 		this.props.fetchQuiz(this.props.match.params.id);
 	}
 	
-	onRetry = () => {
-		this.props.fetchQuizRetry()
-	}
-
-	onAnswerClickHandler = answerId =>{
-		const question = this.props.quiz[this.props.activeQuestion];
-		const results = this.props.results;
-		
-		if(this.props.answerState)
-			if(this.props.answerState[Object.keys(this.props.answerState)[0]] === "success")
-				return
-		
-		if(question.rightAnswerId === answerId){
-			if(!results[question.id])
-				results[question.id] = "success";
-			this.setState({
-				answerState: {[answerId]: "success"},
-				results
-			});
-
-			if(!this.isQuizFinished()){
-				const timeout = setTimeout(()=>{
-					this.setState({
-						activeQuestion: this.state.activeQuestion + 1,
-						answerState: null
-					});
-
-					clearTimeout(timeout);
-				}, 1000)
-			}
-			else{
-				this.setState({isFinished: true});
-			}
-		}
-		else{
-			results[question.id] = "error";
-			this.setState({
-				answerState: {[answerId]: "error"},
-				results
-			})
-		}
-	}
-
-	isQuizFinished = () => {
-		return this.props.activeQuestion + 1 === this.props.quiz.length;
+	componentWillUnmount(){
+		this.props.retryQuiz();
 	}
 
 	render(){
@@ -75,14 +32,14 @@ class Quiz extends Component{
 						<FinishedQuiz 
 							quiz={this.props.quiz} 
 							results={this.props.results}
-							onRetry={this.onRetry}
+							onRetry={this.props.retryQuiz}
 						/>
 					:
 						<ActiveQuiz 
 							answers={this.props.quiz[this.props.activeQuestion].answers}
 							question={this.props.quiz[this.props.activeQuestion].question}
 							rightAnswerId={this.props.quiz[this.props.activeQuestion].rightAnswerId}
-							onAnswerClickHandler={this.onAnswerClickHandler}
+							onAnswerClickHandler={this.props.quizAnswerClick}
 							activeQuestion={this.props.activeQuestion}
 							quizLength={this.props.quiz.length}
 							state={this.props.answerState}
@@ -101,13 +58,16 @@ const mapStateToProps = state =>{
 		answerState: state.quiz.answerState,
 		activeQuestion: state.quiz.activeQuestion,
 		quiz: state.quiz.quiz,
+		loading: state.quiz.loading
 	}
 }
 
 const mapDispatchToProps = dispatch =>{
 	return{
 		fetchQuiz: id => dispatch(fetchQuiz(id)),
-		fetchQuizRetry: () => dispatch(fetchQuiz())
+		fetchQuizRetry: () => dispatch(fetchQuiz()),
+		quizAnswerClick: answerId => dispatch(quizAnswerClick(answerId)),
+		retryQuiz: () => dispatch(retryQuiz())
 	}
 }
 

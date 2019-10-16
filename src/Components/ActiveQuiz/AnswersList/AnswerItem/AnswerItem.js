@@ -4,7 +4,7 @@ import classes from "./AnswerItem.module.css"
 const AnswerItem = props =>{
 	const cls = [classes.AnswerItem];
 
-	if(props.state){
+	if(props.state){console.log(props)
 		cls.push(classes[props.state]);
 	}
 
