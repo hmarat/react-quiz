@@ -35,6 +35,25 @@ export function authSuccess(token) {
     }
 }
 
+export function autoLogin() {
+    return dispatch => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            dispatch(logout())
+        }
+        else {
+            const expirationDate = localStorage.getItem("expirationDate");
+            if (new Date(expirationDate).getTime() < new Date().getTime()) {
+                dispatch(logout())
+            }
+            else {
+                dispatch(authSuccess(token));
+                autoLogout((new Date(expirationDate) - new Date().getTime()) / 1000);
+            }
+        }
+    }
+}
+
 export function autoLogout(time) {
     return dispatch => {
         setTimeout(() => dispatch(logout), time * 1000);
